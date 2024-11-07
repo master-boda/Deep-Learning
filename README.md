@@ -7,4 +7,4 @@
 
 ## Usage
 
-Run setup_data.py to have the data within this directory in a train/test split
+Run setup_data.py to have the data moved into this directory and in a train/test split
