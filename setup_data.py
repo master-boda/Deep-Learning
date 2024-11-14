@@ -56,7 +56,7 @@ def move_images(indices, metadata, target_directory):
 
 # Main function to set up the data
 
-def setup_data(train_directory, test_directory, metadata_csv):
+def setup_data(train_directory, test_directory, val_directory, metadata_csv):
     
     metadata = pd.read_csv(metadata_csv)
     metadata = fix_csv(metadata) # Preprocessing of the metadata
@@ -66,9 +66,14 @@ def setup_data(train_directory, test_directory, metadata_csv):
 
     indices = list(range(len(metadata)))
 
-    # Perform stratified split of images into train and test sets
+    # Perform stratified split of images into train, test and validation sets
+    
     train_indices, test_indices = train_test_split(
-        indices, train_size=0.8, test_size=0.2, random_state=42, stratify=metadata['combined_label']
+        indices, train_size=0.7, test_size=0.3, random_state=42, stratify=metadata['combined_label']
+    )
+    
+    test_indices, val_indices = train_test_split(
+        test_indices, train_size=0.5, test_size=0.5, random_state=42, stratify=metadata['combined_label'][test_indices]
     )
     
     # Move train images to the train directory
@@ -76,7 +81,9 @@ def setup_data(train_directory, test_directory, metadata_csv):
 
     # Move test images to the test directory
     move_images(test_indices, metadata, test_directory)
-
+    
+    # Move validation images to the validation directory
+    move_images(val_indices, metadata, val_directory)
 # Paths
 
 # DEFINE DIRECTORY PATH FOR DATASET (\DeepLearning24_25\)
@@ -85,8 +92,9 @@ source_directory = r"D:\DeepLearning24_25"
 # ---------------------------------
 
 train_directory = os.path.join('data', 'train')
+val_directory = os.path.join('data', 'val')
 test_directory = os.path.join('data', 'test')
 metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
 
 # Setup the data
-setup_data(train_directory, test_directory, metadata_csv)
+setup_data(train_directory, test_directory, val_directory, metadata_csv)
