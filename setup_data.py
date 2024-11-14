@@ -18,7 +18,7 @@ def fix_csv(metadata):
     Removes NaN rows in the metadata CSV.
     """
     metadata.dropna(inplace=True) # remove missing values
-    
+
     # Replace the incorrect directory name with the correct one
     metadata['path_to_image'] = metadata['path_to_image'].apply(
         lambda x: x.replace('BreaKHis_v1/', 'BreaKHis_v1 2/')
