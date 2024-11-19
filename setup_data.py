@@ -17,9 +17,10 @@ def fix_csv(metadata):
     )
     
     return metadata
-# The following function follows a similar thought process from practical class 15
+
+#The following function follows a similar thought process from practical class 15
 # The data (from OUTSIDE the repository) is moved to a data folder inside the repository and further split by magnification levels
-# The images for each magnificatin level is divided into "train", "test" and "val" folders
+# The images for each magnification level is divided into "train", "test" and "val" folders
 # Note: the ".gitignore" file has intructions to ignore the "data" folder so that the repo. can be used without having to commit and push the ~4GB dataset
 def move_images(indices, metadata, target_directory, magnification_level=None):
     """
@@ -58,7 +59,7 @@ def move_images_by_magnification(indices, metadata, target_directory):
         magnification_indices = metadata[metadata['Magnification'] == magnification_level].index
         move_images(magnification_indices, metadata, target_directory, magnification_level)
 
-def setup_data(train_directory, test_directory, metadata_csv):
+def setup_data(train_directory, val_directory, test_directory, metadata_csv):
     
     metadata = pd.read_csv(metadata_csv)
     metadata = fix_csv(metadata) # Preprocessing of the metadata
@@ -68,25 +69,33 @@ def setup_data(train_directory, test_directory, metadata_csv):
 
     indices = list(range(len(metadata)))
 
-    # Perform stratified split of images into train and test sets
-    train_indices, test_indices = train_test_split(
-        indices, train_size=0.8, test_size=0.2, random_state=42, stratify=metadata['combined_label']
+    # Perform stratified split of images into train, val, and test sets
+    train_indices, temp_indices = train_test_split(
+        indices, train_size=0.7, random_state=42, stratify=metadata['combined_label']
+    )
+    val_indices, test_indices = train_test_split(
+        temp_indices, test_size=0.5, random_state=42, stratify=metadata.iloc[temp_indices]['combined_label']
     )
     
     # Move train images to the train directory
     move_images(train_indices, metadata, train_directory)
+
+    # Move val images to the val directory
+    move_images(val_indices, metadata, val_directory)
 
     # Move test images to the test directory
     move_images(test_indices, metadata, test_directory)
     
     # Move images by magnification levels
     move_images_by_magnification(train_indices, metadata, train_directory)
+    move_images_by_magnification(val_indices, metadata, val_directory)
     move_images_by_magnification(test_indices, metadata, test_directory)
 
 source_directory = r"D:\DeepLearning24_25"
 
 train_directory = os.path.join('data', 'train')
+val_directory = os.path.join('data', 'val')
 test_directory = os.path.join('data', 'test')
 metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
 
-setup_data(train_directory, test_directory, metadata_csv)
+setup_data(train_directory, val_directory, test_directory, metadata_csv)
