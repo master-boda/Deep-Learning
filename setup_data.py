@@ -3,14 +3,6 @@ import shutil
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-# The CSV file containing the image metadata contains a column that stores the images paths
-# The paths however dont match the ones in Moodle due to a file name difference ('BreaKHis_v1/', 'BreaKHis_v1 2/')
-
-# As seen in the data exploration notebook there is an extremely small amount of missing values, (<0.1% of the dataset)
-# These rows are dropped
-
-# These two tasks explained above are done in the following function:
-
 def fix_csv(metadata):
     """
     Fix the paths in the metadata CSV by replacing incorrect parts of the path
@@ -25,12 +17,11 @@ def fix_csv(metadata):
     )
     
     return metadata
-
-# The following function follows the same thought process from practical class 15
-# The data (from OUTSIDE the repository) is moved to a data folder inside the repository called "data"
-# The "data" folder is divided into "train" and "test" folders
+# The following function follows a similar thought process from practical class 15
+# The data (from OUTSIDE the repository) is moved to a data folder inside the repository and further split by magnification levels
+# The images for each magnificatin level is divided into "train", "test" and "val" folders
 # Note: the ".gitignore" file has intructions to ignore the "data" folder so that the repo. can be used without having to commit and push the ~4GB dataset
-def move_images(indices, metadata, target_directory):
+def move_images(indices, metadata, target_directory, magnification_level=None):
     """
     Move the images from the source directory to the target directory based on the indices.
     """
@@ -45,6 +36,9 @@ def move_images(indices, metadata, target_directory):
             # If image_path is /home/user/images/photo.jpg, the os.path.basename function will return photo.jpg.
             image_name = os.path.basename(image_path)
             
+            if magnification_level:
+                target_directory = os.path.join(target_directory, magnification_level)
+            
             destination_path = os.path.join(target_directory, image_name)
             
             # Create the destination folder if it doesn't exist
@@ -54,7 +48,15 @@ def move_images(indices, metadata, target_directory):
         else:
             print(f"File not found: {image_path}")
 
-# Main function to set up the data
+def move_images_by_magnification(indices, metadata, target_directory):
+    """
+    Move the images from the source directory to the target directory based on the indices and magnification levels.
+    """
+    magnification_levels = metadata['Magnification'].unique()
+    
+    for magnification_level in magnification_levels:
+        magnification_indices = metadata[metadata['Magnification'] == magnification_level].index
+        move_images(magnification_indices, metadata, target_directory, magnification_level)
 
 def setup_data(train_directory, test_directory, metadata_csv):
     
@@ -76,17 +78,15 @@ def setup_data(train_directory, test_directory, metadata_csv):
 
     # Move test images to the test directory
     move_images(test_indices, metadata, test_directory)
+    
+    # Move images by magnification levels
+    move_images_by_magnification(train_indices, metadata, train_directory)
+    move_images_by_magnification(test_indices, metadata, test_directory)
 
-# Paths
-
-# DEFINE DIRECTORY PATH FOR DATASET (\DeepLearning24_25\)
-# ---------------------------------
 source_directory = r"D:\DeepLearning24_25"
-# ---------------------------------
 
 train_directory = os.path.join('data', 'train')
 test_directory = os.path.join('data', 'test')
 metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
 
-# Setup the data
 setup_data(train_directory, test_directory, metadata_csv)
