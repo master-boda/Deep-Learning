@@ -10,7 +10,7 @@ def fix_csv(metadata):
     Removes NaN rows in the metadata CSV.
     """
     metadata.dropna(inplace=True) # remove missing values
-    
+
     # Replace the incorrect directory name with the correct one
     metadata['path_to_image'] = metadata['path_to_image'].apply(
         lambda x: x.replace('BreaKHis_v1/', 'BreaKHis_v1 2/')
@@ -86,11 +86,16 @@ def setup_data(train_directory, val_directory, test_directory, metadata_csv):
     # Move test images to the test directory
     move_images(test_indices, metadata, test_directory)
     
+
     # Move images by magnification levels
     move_images_by_magnification(train_indices, metadata, train_directory)
     move_images_by_magnification(val_indices, metadata, val_directory)
     move_images_by_magnification(test_indices, metadata, test_directory)
 
+# Paths
+
+# DEFINE DIRECTORY PATH FOR DATASET (\DeepLearning24_25\)
+# ---------------------------------
 source_directory = r"D:\DeepLearning24_25"
 
 train_directory = os.path.join('data', 'train')
