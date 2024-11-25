@@ -20,7 +20,7 @@ def preproc_pipeline(desired_magnification,
     Parameters:
     csv_path (str): Path to the CSV file.
     desired_magnification (str): Desired magnification (e.g., '100X').
-    image_resolution (int): Desired image resolution (e.g., 50).
+    image_resolution (tuple): Desired image resolution (e.g., (50,50)).
     classification_type (str): Classification type, either 'binary' for 'Benign or Malignant' or 'multiclass' for 'Cancer Type'.
     
     Returns:
@@ -64,11 +64,3 @@ def preproc_pipeline(desired_magnification,
     y_val = np.array(y_val)
     
     return X_train, y_train, X_test, y_test, X_val, y_val
-
-# Example usage:
-# csv_path = 'path_to_your_csv_file.csv'
-# desired_magnification = '100X'
-# image_resolution = 50
-# classification_type = 'binary'  # or 'multiclass'
-# X_train, y_train, X_test, y_test, X_val, y_val = preproc_pipeline(desired_magnification='40X', image_resolution=200, classification_type='multiclass')
-# X_train.shape, y_train.shape, X_test.shape, y_test.shape, X_val.shape, y_val.shape
