@@ -25,7 +25,7 @@ def preproc_pipeline(desired_magnification,
     tuple: Arrays for training, validation, and testing splits (X_train, y_train, X_test, y_test, X_val, y_val).
     """
     
-    csv_path='../image_metadata/updated_image_data.csv', 
+    csv_path='image_metadata/updated_image_data.csv' 
     df = pd.read_csv(csv_path)
     
     # Filter the DataFrame based on the desired magnification
@@ -63,3 +63,10 @@ def preproc_pipeline(desired_magnification,
     y_val = np.array(y_val)
     
     return X_train, y_train, X_test, y_test, X_val, y_val
+
+def normalize_pixels(X_train, X_test, X_val):
+    X_train = X_train / 255.0
+    X_test = X_test / 255.0
+    X_val = X_val / 255.0
+    
+    return X_train, X_test, X_val
