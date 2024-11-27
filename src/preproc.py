@@ -12,13 +12,11 @@ def resize_and_append(image_path, label, X, y, img_size):
 
 def preproc_pipeline(desired_magnification, 
                      image_resolution, 
-                     csv_path='../image_metadata/updated_image_data.csv', 
                      classification_type=['binary','multiclass']):
     """
-    Function to prepare data arrays for modeling.
+    Function to prepare data arrays for modeling (Based on Practical Class 15).
     
     Parameters:
-    csv_path (str): Path to the CSV file.
     desired_magnification (str): Desired magnification (e.g., '100X').
     image_resolution (tuple): Desired image resolution (e.g., (50,50)).
     classification_type (str): Classification type, either 'binary' for 'Benign or Malignant' or 'multiclass' for 'Cancer Type'.
@@ -27,6 +25,7 @@ def preproc_pipeline(desired_magnification,
     tuple: Arrays for training, validation, and testing splits (X_train, y_train, X_test, y_test, X_val, y_val).
     """
     
+    csv_path='../image_metadata/updated_image_data.csv', 
     df = pd.read_csv(csv_path)
     
     # Filter the DataFrame based on the desired magnification
