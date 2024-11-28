@@ -5,3 +5,5 @@ Pillow==11.0.0
 scikit_learn==1.5.2
 tensorflow==2.10.0
 opencv-python==4.5.5.64
+llvmlite==0.43.0
+numba==0.60.0
