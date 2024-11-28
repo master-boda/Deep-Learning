@@ -1,17 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
-from keras.preprocessing.image import ImageDataGenerator
-from sklearn.utils import shuffle
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 def binary_classification_baseline_model(input_shape):
-    """  
-    Parameters:
-    input_shape (tuple): Shape of the input images.
-    
-    Returns:
-    keras.Sequential: CNN model.
-    """
     
     model = Sequential()
     
@@ -36,13 +26,6 @@ def binary_classification_baseline_model(input_shape):
     return model
 
 def multiclass_classification_baseline_model(input_shape):
-    """  
-    Parameters:
-    input_shape (tuple): Shape of the input images.
-    
-    Returns:
-    keras.Sequential: CNN model.
-    """
     
     model = Sequential()
     
