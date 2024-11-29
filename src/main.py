@@ -52,8 +52,8 @@ def main(model, classification_type, image_resolution, verbose=True):
         magnifications[magnification]['accuracy'] = test_acc
         
     return magnifications
-        
-print(main(multiclass_classification_baseline_model, 'multiclass', (224, 224)))
+
+print(main(binary_classification_baseline_model, 'binary', (224, 224)))
 
 # 1st Try Results (accuracy, 8 epochs):
 # binary_classification_baseline_model: {'40X': 0.73333335, '100X': 0.71794873, '200X': 0.84437084, '400X': 0.86080587}

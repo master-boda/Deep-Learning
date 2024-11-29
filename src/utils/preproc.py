@@ -68,7 +68,8 @@ def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, 
 def preproc_pipeline(desired_magnification, 
                      image_resolution, 
                      classification_type='binary',
-                     csv_path = 'image_metadata/updated_image_data.csv'):
+                     csv_path = 'image_metadata/updated_image_data.csv',
+                     batch_size=32):
     
     if classification_type == 'binary':
         label_column = 'Benign or Malignant'
@@ -95,7 +96,7 @@ def preproc_pipeline(desired_magnification,
     
     # data augmentation generators
     # shuffles the data so no need to shuffle the data before passing it to the generator
-    train_gen = datagen.flow(X_train, y_train, batch_size=32, shuffle=True)
-    val_gen = datagen.flow(X_val, y_val, batch_size=32, shuffle=True)
+    train_gen = datagen.flow(X_train, y_train, batch_size=batch_size, shuffle=True)
+    val_gen = datagen.flow(X_val, y_val, batch_size=batch_size, shuffle=True)
     
     return train_gen, val_gen, X_test, y_test, class_weights
