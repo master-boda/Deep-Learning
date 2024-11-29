@@ -27,13 +27,13 @@ if len(tf.config.list_physical_devices('GPU')) > 0:
     tf.compat.v1.disable_eager_execution()
 
 
-X_train, y_train, X_test, y_test, X_val, y_val = preproc_pipeline(desired_magnification='200X', 
+train_gen, val_gen, X_test, y_test, class_weights = preproc_pipeline(desired_magnification='200X', 
                                                     image_resolution=(224, 224), 
                                                     classification_type='binary')
 
 model = binary_classification_baseline_model(input_shape=(224, 224, 3))
 
-fitted_model = train_model(X_train, y_train, X_val, y_val, model, epochs=8, data_gen=True)
+fitted_model = train_model(train_gen, val_gen, model, class_weights=class_weights, epochs=8)
 
 test_loss, test_acc = fitted_model.evaluate(X_test, y_test)
 print('Test accuracy:', test_acc)

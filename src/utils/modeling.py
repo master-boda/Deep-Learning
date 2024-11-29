@@ -6,22 +6,13 @@ from sklearn.utils import class_weight
 
 from keras.callbacks import EarlyStopping
 
-def train_model(X_train, y_train, X_val, y_val, model, epochs=10, batch_size=32, early_stopping_patience=3, data_gen=True):
-    # class weights because our problem is unbalanced
-    class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y_train), y=y_train) # np.unique(y_train) possibilitates usage for both binary and multiclass classification
-    
-    class_weights = {i: weight for i, weight in enumerate(class_weights)}
-    
-    # shuffle the data before training (it was not done in the preproc_pipeline function)
-    X_train, y_train = shuffle(X_train, y_train)
-    X_val, y_val = shuffle(X_val, y_val)
-
+def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=3, class_weights=None):
     model.fit(
-        X_train, y_train,
+        train_gen,
         epochs=epochs,
         class_weight=class_weights,
-        validation_data=(X_val, y_val),
-        callbacks=[EarlyStopping(patience=early_stopping_patience)])
-        
-
+        validation_data=val_gen,
+        callbacks=[EarlyStopping(patience=early_stopping_patience, monitor='val_loss')]
+    )
+    
     return model
