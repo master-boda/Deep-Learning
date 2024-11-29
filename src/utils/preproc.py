@@ -67,9 +67,8 @@ def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, 
 
 def preproc_pipeline(desired_magnification, 
                      image_resolution, 
-                     classification_type='binary'):
-
-    csv_path = 'image_metadata/updated_image_data.csv'
+                     classification_type='binary',
+                     csv_path = 'image_metadata/updated_image_data.csv'):
     
     if classification_type == 'binary':
         label_column = 'Benign or Malignant'
