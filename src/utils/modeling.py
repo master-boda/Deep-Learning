@@ -1,12 +1,12 @@
 import numpy as np
 import tensorflow as tf
 
-from sklearn.utils import shuffle
-from sklearn.utils import class_weight
+from sklearn.metrics import classification_report
 
 from keras.callbacks import EarlyStopping
 
 def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=3, class_weights=None):
+    
     model.fit(
         train_gen,
         epochs=epochs,
@@ -16,3 +16,8 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=3,
     )
     
     return model
+
+def get_classification_report(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    y_pred = np.argmax(y_pred, axis=1)
+    print(classification_report(y_test, y_pred))
