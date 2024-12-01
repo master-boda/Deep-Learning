@@ -15,6 +15,7 @@ def resize_and_append(image_path, label, X, y, img_size):
         - X (list): The list to which the resized image array will be appended.
         - y (list): The list to which the label will be appended.
         - img_size (tuple): The target size for resizing the image (width, height).
+        
     Returns:
         None
     """
@@ -35,6 +36,7 @@ def normalize_pixels(X_train, X_test, X_val):
         - X_train (numpy.ndarray): The training dataset with pixel values.
         - X_test (numpy.ndarray): The testing dataset with pixel values.
         - X_val (numpy.ndarray): The validation dataset with pixel values.
+        
     Returns:
         - X_train (numpy.ndarray): Normalized training set images.
         - X_test (numpy.ndarray): Normalized testing set images.
@@ -54,6 +56,7 @@ def label_encode(y_train, y_test, y_val):
         - y_train (array-like): The labels for the training dataset.
         - y_test (array-like): The labels for the testing dataset.
         - y_val (array-like): The labels for the validation dataset.
+        
     Returns:
         - y_train (numpy.ndarray): Encoded training set labels.
         - y_test (numpy.ndarray): Encoded testing set labels.
@@ -78,6 +81,7 @@ def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, 
         - desired_magnification (int): The magnification level to filter the images (40X, 100X, 200X, 400X).
         - image_resolution (tuple): The desired resolution to resize the images (width, height).
         - label_column (str): The name of the column in the CSV file that contains the labels ('Benign or Malignant' or 'Cancer Type').
+        
     Returns:
         - X_train (numpy.ndarray): Training set images.
         - y_train (numpy.ndarray): Training set labels.
@@ -131,6 +135,7 @@ def data_augmentation(X_train, y_train, datagen, augmented_images_per_image):
         - y_train (numpy.ndarray): Array of training labels.
         - datagen (ImageDataGenerator): Keras ImageDataGenerator instance for generating augmented images.
         - augmented_images_per_image (int): Number of augmented images to generate per original image.
+        
     Returns:
         - X_train_augmented (numpy.ndarray): Array of augmented training images.
         - y_train_augmented (numpy.ndarray): Array of augmented training labels.

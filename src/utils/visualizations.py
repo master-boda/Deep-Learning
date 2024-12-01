@@ -9,6 +9,7 @@ def check_image_resolutions(metadata):
     
     Parameters:
         - metadata (pandas.DataFrame): A DataFrame containing image metadata (containing 'path_to_image' column).
+        
     Returns:
         - resolutions (list): A list of tuples where each tuple contains the width and height of an image.
     """
@@ -29,6 +30,7 @@ def plot_distribution_pie(data, col, ax=None, figsize=(10, 5)):
         - col (str): The column name to plot the distribution.
         - ax (matplotlib.axes.Axes, optional): The axes on which to plot the pie chart. If None, a new figure and axes are created. Default is None.
         - figsize (tuple, optional): The size of the figure if ax is None. Default is (10, 5).
+        
     Returns:
         None
     """
@@ -54,6 +56,7 @@ def plot_images_compare_magnification(data, cancer_types, magnifications):
         - data (pd.DataFrame): DataFrame containing the image data with the columns 'Cancer Type', 'Magnification', and 'path_to_image'.
         - cancer_types (list): List of cancer types to be compared.
         - magnifications (list): List of magnifications to be compared.
+        
     Returns:
         None
     """
