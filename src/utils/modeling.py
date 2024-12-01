@@ -16,6 +16,7 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
         - epochs (int, optional): The number of epochs to train the model, the default value is 10.
         - early_stopping_patience (int, optional): The number of epochs with no improvement (monitors 'val_loss') after which training will be stopped, the default value is 5.
         - class_weights (dict, optional): Dictionary mapping class indices (integers) to a weight (float) value, used for weighting the loss function during training. Defaults to None.
+        
     Returns:
         - model (tf.keras.Model): The trained model.
     """

@@ -4,6 +4,21 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
         
 def update_image_paths(metadata):
+    """
+    Update the image paths in the metadata DataFrame to match the new folder structure.
+    This function updates the 'path_to_image' column in the metadata DataFrame by determining
+    the new location of each image based on its magnification and whether it is in the 'train',
+    'test', or 'val' folder. If an image is not found in any of these folders, a warning is printed
+    and the image is marked as "NOT FOUND".
+    
+    Parameters:
+        - metadata (pd.DataFrame): A DataFrame containing image metadata, including a 'path_to_image' column
+                             with the original paths to the images and a 'Magnification' column.
+                             
+    Returns:
+        - metadata (pd.DataFrame): The updated metadata DataFrame with the 'path_to_image' column using the new
+                        folder structure.
+    """
     
     def get_image_location(row):
         
@@ -16,51 +31,76 @@ def update_image_paths(metadata):
         print(f"WARNING: {row['image_name']} not found in any folder.")
         return "NOT FOUND"
     
-    metadata.dropna(inplace=True) # Remove missing values (4 rows only)
+    metadata.dropna(inplace=True) # remove missing values (4 rows only)
     
-    # These are temporary columns to help us find the new paths of the images
+    # these are temporary columns to help us find the new paths of the images
     metadata['image_name'] = metadata['path_to_image'].apply(lambda x: os.path.basename(x))
     metadata['image_location'] = metadata.apply(get_image_location, axis=1)
     
-    # Update the paths to our new structure of folders
+    # update the paths to our new structure of folders
     metadata['path_to_image'] = metadata.apply(
         lambda row: os.path.join('data', row['Magnification'], row['image_location'], row['image_name']),
         axis=1
     )
     
     metadata.drop(columns=['image_name', 'image_location'], inplace=True)
+    
     return metadata
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # avoid running the code when importing the module
 
     def fix_csv(metadata):
         """
-        Fix the paths in the metadata CSV by replacing incorrect parts of the path
+        Cleans and fixes the paths in the given metadata DataFrame.
+        This function performs the following operations on the input DataFrame:
+        1. Removes rows with missing values.
+        2. Replaces incorrect directory names in the 'path_to_image' column with the
+        correct ones (for some reason the downloaded metadata from Moodle contains a " 2"
+        in the 'BreaKHis_v1/' path section).
         
-        Removes NaN rows in the metadata CSV.
+        Parameters:
+            - metadata (pandas.DataFrame): The input DataFrame containing metadata with a 'path_to_image' column.
+            
+        Returns:
+            - metadata (pandas.DataFrame): The cleaned and updated DataFrame.
         """
         metadata.dropna(inplace=True) # remove missing values
 
-        # Replace the incorrect directory name with the correct one
+        # replace the incorrect directory name with the correct one
         metadata['path_to_image'] = metadata['path_to_image'].apply(
             lambda x: x.replace('BreaKHis_v1/', 'BreaKHis_v1 2/')
         )
         
         return metadata
 
-    # The following function follows a similar thought process from practical class 15
-    # The data (from OUTSIDE the repository) is moved to a data folder inside the repository and further split by magnification levels
-    # The images for each magnification level is divided into "train", "test" and "val" folders
-    # Note: the ".gitignore" file has instructions to ignore the "data" folder so that the repo. can be used without having to commit and push the ~4GB dataset
+    # the following function follows a similar thought process from practical class 15
+    # the data (from OUTSIDE the repository) is moved to a data folder inside the repository and further split by magnification levels
+    # the images for each magnification level is divided into "train", "test" and "val" folders
+    # note: the ".gitignore" file has instructions to ignore the "data" folder so that the repo. can be used without having to commit and push the ~4GB dataset
     def move_images(indices, metadata, target_directory, source_directory):
         """
-        Move the images from the source directory to the target directory based on the indices.
+        Moves images from the source directory to the target directory based on the provided indices and metadata.
+        
+        Parameters:
+            - indices (list): List of indices indicating which images to move.
+            - metadata (pandas.DataFrame): DataFrame containing metadata about the images, including 'path_to_image' and 'Magnification' columns.
+            - target_directory (str): The directory where the images should be moved to.
+            - source_directory (str): The directory where the images are currently located.
+            
+        Returns:
+            None
+            
+        Notes:
+            - The function checks if the image file exists before attempting to copy it.
+            - It prints a warning if the image magnification level does not match the magnification level of the target directory.
+            - It creates the target directory if it does not exist.
+            - It prints a message if the file is not found in the source directory.
         """
         
         for idx in indices:
             image_path = os.path.join(source_directory, metadata.iloc[idx]['path_to_image'])
             
-            if os.path.exists(image_path): # Check if the file exists before trying to copy
+            if os.path.exists(image_path): # check if the file exists before trying to copy
                 
                 print(f"Copying {image_path} to {target_directory}")
                             
@@ -68,19 +108,42 @@ if __name__ == '__main__':
                 if metadata.iloc[idx]['Magnification'] != target_directory.split('\\')[-2]:
                     print(f"WARNING: Image magnification level does not match target directory: {image_path}, (target: {target_directory})")            
                 
-                # Create the destination folder if it doesn't exist
+                # create the destination folder if it doesn't exist
                 os.makedirs(target_directory, exist_ok=True)
                 
-                shutil.copy2(image_path, target_directory) # Copy the image to the destination
+                shutil.copy2(image_path, target_directory) # copy the image to the destination
             else:
                 print(f"File not found: {image_path}")
 
     def setup_data(metadata_csv, source_directory):    
+        """
+        Sets up the data by reading metadata from the image metadata CSV file, preprocessing it, and performing a stratified split of images 
+        into training, validation, and test sets based on magnification levels and combined labels.
+        
+        Parameters:
+            - metadata_csv (str): Path to the CSV file containing metadata.
+            - source_directory (str): Path to the directory containing the source images.
+            
+        Returns:
+            None
+            
+        The function performs the following steps:
+        1. Reads the image metadata from the CSV file.
+        2. Preprocesses the metadata using the `fix_csv` function.
+        3. Creates combined labels for stratification by concatenating 'Benign or Malignant' and 'Cancer Type' columns.
+        4. Iterates over unique magnification levels in the metadata.
+        5. For each magnification level:
+            a. Filters the metadata for the current magnification level.
+            b. Prints the distribution of combined labels.
+            c. Creates directories for training, validation, and test sets.
+            d. Performs a stratified split of images into training, validation, and test sets.
+            e. Moves the images to their respective directories.
+        """
         
         metadata = pd.read_csv(metadata_csv)
-        metadata = fix_csv(metadata) # Preprocessing of the metadata
+        metadata = fix_csv(metadata) # preprocessing of the metadata
 
-        # Create combined labels for stratification
+        # create combined labels for stratification
         metadata['combined_label'] = metadata['Benign or Malignant'] + '_' + metadata['Cancer Type']
 
         magnification_levels = metadata['Magnification'].unique()
@@ -90,13 +153,13 @@ if __name__ == '__main__':
             magnification_metadata = metadata[metadata['Magnification'] == magnification_level].reset_index(drop=True)
             indices = list(magnification_metadata.index)
             
-            print(magnification_metadata['combined_label'].value_counts())  # Check the distribution
+            print(magnification_metadata['combined_label'].value_counts())  # check the distribution
 
             train_directory = os.path.join('data', f'{magnification_level}', 'train')
             val_directory = os.path.join('data', f'{magnification_level}', 'val')
             test_directory = os.path.join('data', f'{magnification_level}', 'test')
 
-            # Perform stratified split of images into train, val, and test sets
+            # perform stratified split of images into train, val, and test sets
             train_indices, temp_indices = train_test_split(
                 indices, train_size=0.7, random_state=42, stratify=magnification_metadata['combined_label']
             )
@@ -104,19 +167,19 @@ if __name__ == '__main__':
                 temp_indices, test_size=0.5, random_state=42, stratify=magnification_metadata.loc[temp_indices]['combined_label']
             )
             
-            # Move train images to the train directory
+            # move train images to the train directory
             move_images(indices=train_indices, metadata=magnification_metadata, target_directory=train_directory, source_directory=source_directory)
 
-            # Move val images to the val directory
+            # move val images to the val directory
             move_images(indices=val_indices, metadata=magnification_metadata, target_directory=val_directory, source_directory=source_directory)
 
-            # Move test images to the test directory
+            # move test images to the test directory
             move_images(indices=test_indices, metadata=magnification_metadata, target_directory=test_directory, source_directory=source_directory)
 
 
-    # Paths
+    # paths
 
-    # DEFINE DIRECTORY PATH FOR DATASET (\DeepLearning24_25\)
+    # define directory path for dataset (\DeepLearning24_25\)
     # ---------------------------------
     source_directory = r"D:\DeepLearning24_25"
     # ---------------------------------
@@ -124,7 +187,7 @@ if __name__ == '__main__':
     metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
     setup_data(metadata_csv, source_directory)
 
-    # Update the paths in the metadata CSV to the new image locations
+    # update the paths in the metadata CSV to the new image locations
     img_metadata_df = pd.read_csv('image_metadata/image_data.csv')
     img_metadata_df = update_image_paths(img_metadata_df)
     img_metadata_df.to_csv('image_metadata/updated_image_data.csv', index=False)
