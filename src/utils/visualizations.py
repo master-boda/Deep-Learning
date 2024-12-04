@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import cv2
 from PIL import Image
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 def check_image_resolutions(metadata):
     """
@@ -75,3 +77,23 @@ def plot_images_compare_magnification(data, cancer_types, magnifications):
             axes[j][i].imshow(image)
             axes[j][i].set_title(f"{cancer_type} (Mag.= {mag})")
             axes[j][i].axis('off')
+            
+def plot_confusion_matrix(y_true, y_pred, class_names):
+    """
+    Plot confusion matrix using seaborn heatmap.
+    
+    Parameters:
+        - y_true (array-like): The true labels.
+        - y_pred (array-like): The predicted labels.
+        - class_names (list): The names of the classes.
+        
+    Returns:
+        None
+    """
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(10, 7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title('Confusion Matrix')
+    plt.show()

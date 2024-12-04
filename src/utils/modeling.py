@@ -1,9 +1,14 @@
 import numpy as np
 import tensorflow as tf
+import os
 
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
 from keras.callbacks import EarlyStopping
+
+from src.utils.visualizations import plot_confusion_matrix
+
+from tabulate import tabulate
 
 def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5, class_weights=None):
     """
@@ -31,20 +36,90 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
     
     return model
 
-def get_classification_report(model, X_test, y_test):
+def save_model(model, path="src/models", model_name="saved_model"):
     """
-    Generates and prints a classification report for a given model and test data.
+    Save the TensorFlow model to the specified path.
 
     Parameters:
-        - model (object): The trained model used for making predictions.
-        - X_test (array-like): The test data features.
-        - y_test (array-like): The true labels for the test data.
-
+    - model: TensorFlow model to be saved.
+    - path: Destination path where the model will be saved. Default is "models".
+    - model_name: Name of the model file. Default is "saved_model".
+    
     Returns:
         None
     """
-    y_pred = model.predict(X_test)
-    y_pred = np.argmax(y_pred, axis=1)
-    print(classification_report(y_test, y_pred))
+    if not os.path.exists(path):
+        os.makedirs(path)
+    model.save(os.path.join(path, model_name))
+
+def evaluate_model(model, test_gen, classification_type='binary'):
+    """
+    Evaluate a TensorFlow model and plot evaluation metrics.
     
-    return None
+    Parameters:
+        - model (tf.keras.Model): The trained TensorFlow model.
+        - test_generator (Generator): The test data generator.
+        - classification_type (str): Type of classification ('binary' or 'multiclass').
+        
+    Returns:
+        - results (dict): Dictionary containing evaluation metrics.
+    """
+    y_pred_prob = model.predict(test_gen)
+    
+    # handles both binary and multiclass classification
+    if classification_type == 'binary':
+        y_pred = (y_pred_prob > 0.5).astype(int).flatten() # convert probabilities to binary predictions
+    else:
+        y_pred = np.argmax(y_pred_prob, axis=1)
+    
+    # workaround to extract true labels from the generator (since it's a generator, we can't directly access the labels with '.classes')
+    y_true = np.concatenate([test_gen[i][1] for i in range(len(test_gen))])
+
+    # map predicted and true labels to their original class names
+    multiclass_labels = ['Adenosis', 'Ductal Carcinoma', 'Fibroadenoma', 'Lobular Carcinoma', 'Mucinous Carcinoma', 'Papillary Carcinoma', 'Phyllodes Tumor', 'Tubular Adenoma']
+    binary_labels = ['Benign', 'Malignant']
+    
+    # select the appropriate class names based on the classification type
+    class_names = multiclass_labels if classification_type == 'multiclass' else binary_labels
+
+    # map predicted and true labels to their original class names so that it is easier to interpret the results
+    y_pred_labels = [class_names[i] for i in y_pred]
+    y_true_labels = [class_names[i] for i in y_true]
+
+    accuracy = accuracy_score(y_true_labels, y_pred_labels)
+    report = classification_report(y_true_labels, y_pred_labels, output_dict=True)
+    conf_matrix = confusion_matrix(y_true_labels, y_pred_labels)
+
+    print(f"\nAccuracy: {accuracy:.4f}\n")
+    
+    # print classification report in a tabulated format (more readable and aesthetic)
+    print("Classification Report:")
+    headers = ["Class", "Precision", "Recall", "F1-Score", "Support"]
+    rows = [
+        [label, metrics['precision'], metrics['recall'], metrics['f1-score'], metrics['support']]
+        for label, metrics in report.items() if label not in ['accuracy', 'macro avg', 'weighted avg']
+    ]
+    print(tabulate(rows, headers, tablefmt='grid'))
+
+    # overall metrics
+    overall_headers = ["Metric", "Value"]
+    overall_rows = [
+        ["Accuracy", report['accuracy']],
+        ["Macro Avg Precision", report['macro avg']['precision']],
+        ["Macro Avg Recall", report['macro avg']['recall']],
+        ["Macro Avg F1-Score", report['macro avg']['f1-score']],
+        ["Weighted Avg Precision", report['weighted avg']['precision']],
+        ["Weighted Avg Recall", report['weighted avg']['recall']],
+        ["Weighted Avg F1-Score", report['weighted avg']['f1-score']],
+    ]
+    print("\nOverall Metrics:")
+    print(tabulate(overall_rows, overall_headers, tablefmt='grid'))
+
+    plot_confusion_matrix(y_true_labels, y_pred_labels, class_names)
+    
+    results = {
+        'accuracy': accuracy,
+        'classification_report': report,
+        'confusion_matrix': conf_matrix
+    }
+    return results

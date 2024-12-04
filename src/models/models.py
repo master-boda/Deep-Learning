@@ -50,18 +50,3 @@ def multiclass_classification_baseline_model(input_shape):
                   metrics=['accuracy'])
     
     return model
-
-def binary_classification_vgg16_model(input_shape):
-    base_model = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
-    
-    model = Sequential()
-    model.add(base_model)
-    model.add(Flatten())
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    
-    model.compile(optimizer=Adam(),
-                  loss='binary_crossentropy',
-                  metrics=['accuracy'])
-    
-    return model
