@@ -25,28 +25,6 @@ def resize_and_append(image_path, label, X, y, img_size):
         
         X.append(img_array)
         y.append(label)
-        
-def normalize_pixels(X_train, X_test, X_val):
-    """
-    Normalize pixel values of training, testing, and validation datasets.
-    Scales the pixel values of the input datasets to the range [0, 1]
-    by dividing each pixel value by 255.0 (max pixel intensity).
-    
-    Parameters:
-        - X_train (numpy.ndarray): The training dataset with pixel values.
-        - X_test (numpy.ndarray): The testing dataset with pixel values.
-        - X_val (numpy.ndarray): The validation dataset with pixel values.
-        
-    Returns:
-        - X_train (numpy.ndarray): Normalized training set images.
-        - X_test (numpy.ndarray): Normalized testing set images.
-        - X_val (numpy.ndarray): Normalized validation set images.
-    """
-    X_train = X_train / 255.0
-    X_test = X_test / 255.0
-    X_val = X_val / 255.0
-    
-    return X_train, X_test, X_val
     
 def label_encode(y_train, y_test, y_val):
     """
@@ -121,9 +99,6 @@ def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, 
     # label encode the target variable (use sparse_categorical_crossentropy as loss function for multiclass)
     y_train, y_test, y_val = label_encode(y_train, y_test, y_val)
     
-    # normalize pixel intensities
-    X_train, X_test, X_val = normalize_pixels(X_train, X_test, X_val)
-    
     return X_train, y_train, X_test, y_test, X_val, y_val
 
 def data_augmentation(X_train, y_train, datagen, augmented_images_per_image):
@@ -192,8 +167,7 @@ def preproc_pipeline(desired_magnification,
     Returns:
         - train_gen (Iterator): Data generator for the training dataset.
         - val_gen (Iterator): Data generator for the validation dataset.
-        - X_test (numpy.ndarray): Array of test set images.
-        - y_test (numpy.ndarray): Array of test set labels.
+        - test_gen (Iterator): Data generator for the test dataset.
         - class_weights (dict): Dictionary of class weights to handle class imbalance.
     """
     
@@ -206,6 +180,7 @@ def preproc_pipeline(desired_magnification,
     X_train, y_train, X_test, y_test, X_val, y_val = load_and_preprocess_data(csv_path, desired_magnification, image_resolution, label_column)
     
     datagen = ImageDataGenerator(
+    rescale=1./255,
     rotation_range=30,
     width_shift_range=0.2,
     height_shift_range=0.2,
@@ -229,6 +204,11 @@ def preproc_pipeline(desired_magnification,
     # data augmentation generators
     # shuffles the data so no need to shuffle the data before passing it to the generator
     train_gen = datagen.flow(X_train, y_train, batch_size=batch_size, shuffle=True)
-    val_gen = datagen.flow(X_val, y_val, batch_size=batch_size, shuffle=True)
     
-    return train_gen, val_gen, X_test, y_test, class_weights
+    # define a generator for the validation and test data (only rescale)
+    datagen_clean_pass = ImageDataGenerator(rescale=1./255)
+    
+    val_gen = datagen_clean_pass.flow(X_val, y_val, batch_size=batch_size, shuffle=True)
+    test_gen = datagen_clean_pass.flow(X_test, y_test, batch_size=batch_size, shuffle=False)
+    
+    return train_gen, val_gen, test_gen, class_weights
