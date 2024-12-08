@@ -47,16 +47,14 @@ def label_encode(y_train, y_test, y_val):
         
     return y_train, y_test, y_val
 
-def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, label_column):
+def load_and_preprocess_data(csv_path, image_resolution, label_column):
     """
     Load and preprocess image data from the CSV file containing the image metadata.
-    This function reads image data paths and labels from the CSV file, filters the data based on the desired magnification,
-    resizes the images to the specified resolution, sorts the data into training, testing, and validation arrays.
-    The images are then normalized, and the labels are encoded.
+    This function reads image data paths and labels from the CSV file, resizes the images to the specified resolution,
+    sorts the data into training, testing, and validation arrays. The images are then normalized, and the labels are encoded.
     
     Parameters:
         - csv_path (str): Path to the image metadata CSV.
-        - desired_magnification (int): The magnification level to filter the images (40X, 100X, 200X, 400X).
         - image_resolution (tuple): The desired resolution to resize the images (width, height).
         - label_column (str): The name of the column in the CSV file that contains the labels ('Benign or Malignant' or 'Cancer Type').
         
@@ -70,15 +68,12 @@ def load_and_preprocess_data(csv_path, desired_magnification, image_resolution, 
     """
     df = pd.read_csv(csv_path)
     
-    # select only the rows for the selected magnification (40X, 100X, 200X, 400X)
-    df_filtered = df[df['Magnification'] == desired_magnification]
-    
     X_train, y_train = [], []
     X_test, y_test = [], []
     X_val, y_val = [], []
     
     # it is necessary to use the updated_image_data.csv file to get the correct path to the images
-    for boda, row in df_filtered.iterrows():
+    for boda, row in df.iterrows():
         image_path = row['path_to_image']
         label = row[label_column]
         if 'train' in image_path:
@@ -141,8 +136,7 @@ def data_augmentation(X_train, y_train, datagen, augmented_images_per_image):
     
     return X_train_augmented, y_train_augmented
 
-def preproc_pipeline(desired_magnification, 
-                     image_resolution, 
+def preproc_pipeline(image_resolution, 
                      classification_type='binary',
                      use_data_augmentation=False,
                      augmented_images_per_image=5,
@@ -151,12 +145,11 @@ def preproc_pipeline(desired_magnification,
     """
     Preprocess image data.
 
-    This function loads image data from the CSV file containing image metadata, filters it based on the desired magnification,
-    resizes the images, normalizes pixel values, encodes labels, and optionally performs data augmentation on the training set.
-    It returns data generators for training and validation, as well as the test dataset and class weights.
+    This function loads image data from the CSV file containing image metadata, resizes the images, normalizes pixel values,
+    encodes labels, and optionally performs data augmentation on the training set. It returns data generators for training
+    and validation, as well as the test dataset and class weights.
 
     Parameters:
-        - desired_magnification (int): The magnification level to filter the images (40X, 100X, 200X, 400X).
         - image_resolution (tuple): The desired resolution to resize the images (width, height).
         - classification_type (str, optional): The type of classification ('binary' or 'multiclass'). Defaults to 'binary'.
         - use_data_augmentation (bool, optional): Whether to perform data augmentation on the training dataset. Defaults to False.
@@ -177,7 +170,7 @@ def preproc_pipeline(desired_magnification,
         classification_type = 'multiclass'
         label_column = 'Cancer Type'
     
-    X_train, y_train, X_test, y_test, X_val, y_val = load_and_preprocess_data(csv_path, desired_magnification, image_resolution, label_column)
+    X_train, y_train, X_test, y_test, X_val, y_val = load_and_preprocess_data(csv_path, image_resolution, label_column)
     
     datagen = ImageDataGenerator(
     rescale=1./255,

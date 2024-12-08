@@ -7,13 +7,13 @@ def update_image_paths(metadata):
     """
     Update the image paths in the metadata DataFrame to match the new folder structure.
     This function updates the 'path_to_image' column in the metadata DataFrame by determining
-    the new location of each image based on its magnification and whether it is in the 'train',
+    the new location of each image based on whether it is in the 'train',
     'test', or 'val' folder. If an image is not found in any of these folders, a warning is printed
     and the image is marked as "NOT FOUND".
     
     Parameters:
         - metadata (pd.DataFrame): A DataFrame containing image metadata, including a 'path_to_image' column
-                             with the original paths to the images and a 'Magnification' column.
+                             with the original paths to the images.
                              
     Returns:
         - metadata (pd.DataFrame): The updated metadata DataFrame with the 'path_to_image' column using the new
@@ -24,7 +24,7 @@ def update_image_paths(metadata):
         
         possible_locations = ['train', 'test', 'val']
         for location in possible_locations:
-            full_path = os.path.join('data', row['Magnification'], location, row['image_name'])
+            full_path = os.path.join('data', location, row['image_name'])
             if os.path.exists(full_path):
                 return location
             
@@ -39,7 +39,7 @@ def update_image_paths(metadata):
     
     # update the paths to our new structure of folders
     metadata['path_to_image'] = metadata.apply(
-        lambda row: os.path.join('data', row['Magnification'], row['image_location'], row['image_name']),
+        lambda row: os.path.join('data', row['image_location'], row['image_name']),
         axis=1
     )
     
@@ -98,16 +98,12 @@ if __name__ == '__main__':  # avoid running the code when importing the module
         """
         
         for idx in indices:
-            image_path = os.path.join(source_directory, metadata.iloc[idx]['path_to_image'])
+            image_path = os.path.join(source_directory, metadata.loc[idx, 'path_to_image'])
             
             if os.path.exists(image_path): # check if the file exists before trying to copy
                 
                 print(f"Copying {image_path} to {target_directory}")
                             
-                # make sure that the image magnification level matches the magnification level of the target directory
-                if metadata.iloc[idx]['Magnification'] != target_directory.split('\\')[-2]:
-                    print(f"WARNING: Image magnification level does not match target directory: {image_path}, (target: {target_directory})")            
-                
                 # create the destination folder if it doesn't exist
                 os.makedirs(target_directory, exist_ok=True)
                 
@@ -118,7 +114,7 @@ if __name__ == '__main__':  # avoid running the code when importing the module
     def setup_data(metadata_csv, source_directory):    
         """
         Sets up the data by reading metadata from the image metadata CSV file, preprocessing it, and performing a stratified split of images 
-        into training, validation, and test sets based on magnification levels and combined labels.
+        into training, validation, and test sets based on combined labels.
         
         Parameters:
             - metadata_csv (str): Path to the CSV file containing metadata.
@@ -131,13 +127,11 @@ if __name__ == '__main__':  # avoid running the code when importing the module
         1. Reads the image metadata from the CSV file.
         2. Preprocesses the metadata using the `fix_csv` function.
         3. Creates combined labels for stratification by concatenating 'Benign or Malignant' and 'Cancer Type' columns.
-        4. Iterates over unique magnification levels in the metadata.
-        5. For each magnification level:
-            a. Filters the metadata for the current magnification level.
-            b. Prints the distribution of combined labels.
-            c. Creates directories for training, validation, and test sets.
-            d. Performs a stratified split of images into training, validation, and test sets.
-            e. Moves the images to their respective directories.
+        4. Filters the metadata.
+        5. Prints the distribution of combined labels.
+        6. Creates directories for training, validation, and test sets.
+        7. Performs a stratified split of images into training, validation, and test sets.
+        8. Moves the images to their respective directories.
         """
         
         metadata = pd.read_csv(metadata_csv)
@@ -145,36 +139,32 @@ if __name__ == '__main__':  # avoid running the code when importing the module
 
         # create combined labels for stratification
         metadata['combined_label'] = metadata['Benign or Malignant'] + '_' + metadata['Cancer Type']
+        metadata.reset_index(drop=True, inplace=True)
 
-        magnification_levels = metadata['Magnification'].unique()
+        indices = list(metadata.index)
+        
+        print(metadata['combined_label'].value_counts())  # check the distribution
 
-        for magnification_level in magnification_levels:
-            
-            magnification_metadata = metadata[metadata['Magnification'] == magnification_level].reset_index(drop=True)
-            indices = list(magnification_metadata.index)
-            
-            print(magnification_metadata['combined_label'].value_counts())  # check the distribution
+        train_directory = os.path.join('data', 'train')
+        val_directory = os.path.join('data', 'val')
+        test_directory = os.path.join('data', 'test')
 
-            train_directory = os.path.join('data', f'{magnification_level}', 'train')
-            val_directory = os.path.join('data', f'{magnification_level}', 'val')
-            test_directory = os.path.join('data', f'{magnification_level}', 'test')
+        # perform stratified split of images into train, val, and test sets
+        train_indices, temp_indices = train_test_split(
+            indices, train_size=0.7, random_state=42, stratify=metadata['combined_label']
+        )
+        val_indices, test_indices = train_test_split(
+            temp_indices, test_size=0.5, random_state=42, stratify=metadata.loc[temp_indices]['combined_label']
+        )
+        
+        # move train images to the train directory
+        move_images(indices=train_indices, metadata=metadata, target_directory=train_directory, source_directory=source_directory)
 
-            # perform stratified split of images into train, val, and test sets
-            train_indices, temp_indices = train_test_split(
-                indices, train_size=0.7, random_state=42, stratify=magnification_metadata['combined_label']
-            )
-            val_indices, test_indices = train_test_split(
-                temp_indices, test_size=0.5, random_state=42, stratify=magnification_metadata.loc[temp_indices]['combined_label']
-            )
-            
-            # move train images to the train directory
-            move_images(indices=train_indices, metadata=magnification_metadata, target_directory=train_directory, source_directory=source_directory)
+        # move val images to the val directory
+        move_images(indices=val_indices, metadata=metadata, target_directory=val_directory, source_directory=source_directory)
 
-            # move val images to the val directory
-            move_images(indices=val_indices, metadata=magnification_metadata, target_directory=val_directory, source_directory=source_directory)
-
-            # move test images to the test directory
-            move_images(indices=test_indices, metadata=magnification_metadata, target_directory=test_directory, source_directory=source_directory)
+        # move test images to the test directory
+        move_images(indices=test_indices, metadata=metadata, target_directory=test_directory, source_directory=source_directory)
 
 
     # paths

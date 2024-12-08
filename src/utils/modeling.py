@@ -54,7 +54,7 @@ def save_model(model, path="src/models", model_name="saved_model.h5"):
         os.makedirs(path)
     model.save(os.path.join(path, model_name), save_format='h5')
 
-def evaluate_model(model, classification_type='binary', desired_magnification='40X'):
+def evaluate_model(model, classification_type='binary'):
     """
     Evaluate a TensorFlow model and plot evaluation metrics.
     
@@ -67,7 +67,7 @@ def evaluate_model(model, classification_type='binary', desired_magnification='4
         - results (dict): Dictionary containing evaluation metrics.
     """
     print("Loading test data...")
-    train_gen, val_gen, test_gen, class_weights = preproc_pipeline(desired_magnification, (224, 224), classification_type=classification_type, use_data_augmentation=False)
+    train_gen, val_gen, test_gen, class_weights = preproc_pipeline((224, 224), classification_type=classification_type, use_data_augmentation=False)
     
     print("Starting model evaluation...")
     
