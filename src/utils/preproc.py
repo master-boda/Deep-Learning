@@ -209,6 +209,6 @@ def preproc_pipeline(desired_magnification,
     datagen_clean_pass = ImageDataGenerator(rescale=1./255)
     
     val_gen = datagen_clean_pass.flow(X_val, y_val, batch_size=batch_size, shuffle=True)
-    test_gen = datagen_clean_pass.flow(X_test, y_test, batch_size=batch_size)
+    test_gen = datagen_clean_pass.flow(X_test, y_test, batch_size=batch_size, shuffle=False)
     
     return train_gen, val_gen, test_gen, class_weights

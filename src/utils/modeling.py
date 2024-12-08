@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 import os
 
+from src.utils.preproc import *
+
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
 from keras.callbacks import EarlyStopping
@@ -52,7 +54,7 @@ def save_model(model, path="src/models", model_name="saved_model"):
         os.makedirs(path)
     model.save(os.path.join(path, model_name))
 
-def evaluate_model(model, test_gen, classification_type='binary'):
+def evaluate_model(model, classification_type='binary', desired_magnification='40X'):
     """
     Evaluate a TensorFlow model and plot evaluation metrics.
     
@@ -64,7 +66,18 @@ def evaluate_model(model, test_gen, classification_type='binary'):
     Returns:
         - results (dict): Dictionary containing evaluation metrics.
     """
-    y_pred_prob = model.predict(test_gen)
+    print("Loading test data...")
+    train_gen, val_gen, test_gen, class_weights = preproc_pipeline(desired_magnification, (224, 224), classification_type=classification_type, use_data_augmentation=False)
+    
+    print("Starting model evaluation...")
+    
+    # reset the generator before making predictions
+    test_gen.reset()
+    
+    total_samples = test_gen.n
+    print(f"Total number of samples in the test generator: {total_samples}")
+    
+    y_pred_prob = model.predict_generator(test_gen, steps=(total_samples // test_gen.batch_size) + 1) # +1 to account for remaining samples that don't make a full batch
     
     # handles both binary and multiclass classification
     if classification_type == 'binary':
@@ -116,10 +129,12 @@ def evaluate_model(model, test_gen, classification_type='binary'):
     print(tabulate(overall_rows, overall_headers, tablefmt='grid'))
 
     plot_confusion_matrix(y_true_labels, y_pred_labels, class_names)
+    print("Plotted confusion matrix.")
     
     results = {
         'accuracy': accuracy,
         'classification_report': report,
         'confusion_matrix': conf_matrix
     }
+    print("Evaluation complete. Returning results.")
     return results
