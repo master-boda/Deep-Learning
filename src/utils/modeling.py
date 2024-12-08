@@ -38,21 +38,21 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
     
     return model
 
-def save_model(model, path="src/models", model_name="saved_model"):
+def save_model(model, path="src/models", model_name="saved_model.h5"):
     """
-    Save the TensorFlow model to the specified path.
+    Save the TensorFlow model to the specified path in HDFS5 format.
 
     Parameters:
     - model: TensorFlow model to be saved.
-    - path: Destination path where the model will be saved. Default is "models".
-    - model_name: Name of the model file. Default is "saved_model".
+    - path: Destination path where the model will be saved. Default is "src/models".
+    - model_name: Name of the model file. Default is "saved_model.h5".
     
     Returns:
         None
     """
     if not os.path.exists(path):
         os.makedirs(path)
-    model.save(os.path.join(path, model_name))
+    model.save(os.path.join(path, model_name), save_format='h5')
 
 def evaluate_model(model, classification_type='binary', desired_magnification='40X'):
     """
