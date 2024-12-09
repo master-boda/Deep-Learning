@@ -96,14 +96,14 @@ def load_and_preprocess_data(csv_path, image_resolution, label_column):
     
     return X_train, y_train, X_test, y_test, X_val, y_val
 
-def data_augmentation(X_train, y_train, datagen, augmented_images_per_image):
+def data_augmentation(X_train, y_train, datagen_no_rescale, augmented_images_per_image):
     """
     Perform data augmentation on the training dataset.
     
     Parameters:
         - X_train (numpy.ndarray): Array of training images.
         - y_train (numpy.ndarray): Array of training labels.
-        - datagen (ImageDataGenerator): Keras ImageDataGenerator instance for generating augmented images.
+        - datagen_no_rescale (ImageDataGenerator): Keras ImageDataGenerator instance for generating augmented images without rescaling.
         - augmented_images_per_image (int): Number of augmented images to generate per original image.
         
     Returns:
@@ -123,12 +123,10 @@ def data_augmentation(X_train, y_train, datagen, augmented_images_per_image):
         x = X_train[i]
         y = y_train[i]
         x = x.reshape((1,) + x.shape) # datagen.flow expects 4D arrays, so we need to reshape the 3D array
-        boda = 0
-        for batch in datagen.flow(x, batch_size=1): # generate 1 augmented image per iteration
+        for batch in datagen_no_rescale.flow(x, batch_size=1): # generate 1 augmented image per iteration
             augmented_images.append(batch[0])
             augmented_labels.append(y)
-            boda += 1
-            if boda >= augmented_images_per_image:
+            if len(augmented_images) >= (i + 1) * (augmented_images_per_image + 1):
                 break
 
     X_train_augmented = np.array(augmented_images)
@@ -173,29 +171,34 @@ def preproc_pipeline(image_resolution,
     X_train, y_train, X_test, y_test, X_val, y_val = load_and_preprocess_data(csv_path, image_resolution, label_column)
     
     datagen = ImageDataGenerator(
-    rescale=1./255,
-    rotation_range=30,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest',
+        rescale=1./255,
+        rotation_range=30,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest',
     )
     
-    if use_data_augmentation == True:
-        print(f'Number of training images before data augmentation: {len(X_train)}')
-        X_train, y_train = data_augmentation(X_train, y_train, datagen, augmented_images_per_image)
-        print(f'Number of training images after data augmentation: {len(X_train)}')
+    datagen_no_rescale = ImageDataGenerator(    # so that we dont rescale twice when using data augmentation
+        rotation_range=30,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest',
+    )
+    
+    if use_data_augmentation:
+        X_train, y_train = data_augmentation(X_train, y_train, datagen_no_rescale, augmented_images_per_image)
     
     # calculate class weights because our problem is unbalanced
-    # np.unique makes this work for both binary (Benign/Malignant) and multiclass classification (Cancer Type)
     class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
     class_weights = {i: weight for i, weight in enumerate(class_weights)}
 
-    
     # data augmentation generators
-    # shuffles the data so no need to shuffle the data before passing it to the generator
     train_gen = datagen.flow(X_train, y_train, batch_size=batch_size, shuffle=True)
     
     # define a generator for the validation and test data (only rescale)

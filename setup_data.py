@@ -151,11 +151,9 @@ if __name__ == '__main__':  # avoid running the code when importing the module
 
         # perform stratified split of images into train, val, and test sets
         train_indices, temp_indices = train_test_split(
-            indices, train_size=0.7, random_state=42, stratify=metadata['combined_label']
-        )
+            indices, train_size=0.7, random_state=42, stratify=metadata['combined_label'], shuffle=True)
         val_indices, test_indices = train_test_split(
-            temp_indices, test_size=0.5, random_state=42, stratify=metadata.loc[temp_indices]['combined_label']
-        )
+            temp_indices, test_size=0.5, random_state=42, stratify=metadata.loc[temp_indices]['combined_label'], shuffle=True)
         
         # move train images to the train directory
         move_images(indices=train_indices, metadata=metadata, target_directory=train_directory, source_directory=source_directory)

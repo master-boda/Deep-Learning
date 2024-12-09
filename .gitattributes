@@ -1,0 +1,4 @@
+*.h5 filter=lfs diff=lfs merge=lfs -text
+src/models/vgg16_binary_classification_V1.h5 filter=lfs diff=lfs merge=lfs -text
+D:/deep_learning_project/src/models/vgg16_binary_classification_V1.h5 filter=lfs diff=lfs merge=lfs -text
+D:/deep_learning_project/src/models/vgg16_binary_classification.h5/saved_model.h5 filter=lfs diff=lfs merge=lfs -text
