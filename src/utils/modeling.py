@@ -12,7 +12,7 @@ from src.utils.visualizations import plot_confusion_matrix
 
 from tabulate import tabulate
 
-def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5, class_weights=None):
+def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5, class_weights=None, steps_per_epoch=None):
     """
     Trains a given model using the provided training and validation data generators.
     
@@ -23,6 +23,7 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
         - epochs (int, optional): The number of epochs to train the model, the default value is 10.
         - early_stopping_patience (int, optional): The number of epochs with no improvement (monitors 'val_loss') after which training will be stopped, the default value is 5.
         - class_weights (dict, optional): Dictionary mapping class indices (integers) to a weight (float) value, used for weighting the loss function during training. Defaults to None.
+        - steps_per_epoch (int, optional): The number of steps (batches of samples) to yield from the generator before declaring one epoch finished and starting the next epoch. Defaults to None.
         
     Returns:
         - model (tf.keras.Model): The trained model.
@@ -31,6 +32,7 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
     model.fit(
         train_gen,
         epochs=epochs,
+        steps_per_epoch=steps_per_epoch,
         class_weight=class_weights,
         validation_data=val_gen,
         callbacks=[EarlyStopping(patience=early_stopping_patience, monitor='val_loss')]
@@ -67,7 +69,7 @@ def evaluate_model(model, classification_type='binary'):
         - results (dict): Dictionary containing evaluation metrics.
     """
     print("Loading test data...")
-    train_gen, val_gen, test_gen, class_weights = preproc_pipeline((224, 224), classification_type=classification_type, use_data_augmentation=False)
+    train_gen, val_gen, test_gen, class_weights, steps = preproc_pipeline((224, 224), classification_type=classification_type, use_data_augmentation=False)
     
     print("Starting model evaluation...")
     

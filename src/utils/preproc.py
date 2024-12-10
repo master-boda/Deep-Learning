@@ -75,7 +75,7 @@ def load_and_preprocess_data(csv_path, image_resolution, label_column):
     # it is necessary to use the updated_image_data.csv file to get the correct path to the images
     for boda, row in df.iterrows():
         image_path = row['path_to_image']
-        label = row[label_column]
+        label = row[label_column] 
         if 'train' in image_path:
             resize_and_append(image_path, label, X_train, y_train, image_resolution)
         elif 'test' in image_path:
@@ -96,56 +96,19 @@ def load_and_preprocess_data(csv_path, image_resolution, label_column):
     
     return X_train, y_train, X_test, y_test, X_val, y_val
 
-def data_augmentation(X_train, y_train, datagen_no_rescale, augmented_images_per_image):
-    """
-    Perform data augmentation on the training dataset.
-    
-    Parameters:
-        - X_train (numpy.ndarray): Array of training images.
-        - y_train (numpy.ndarray): Array of training labels.
-        - datagen_no_rescale (ImageDataGenerator): Keras ImageDataGenerator instance for generating augmented images without rescaling.
-        - augmented_images_per_image (int): Number of augmented images to generate per original image.
-        
-    Returns:
-        - X_train_augmented (numpy.ndarray): Array of augmented training images.
-        - y_train_augmented (numpy.ndarray): Array of augmented training labels.
-    """
-    augmented_images = []
-    augmented_labels = []
-
-    # also include original images in the data augmentation
-    for i in range(len(X_train)):
-        augmented_images.append(X_train[i])
-        augmented_labels.append(y_train[i])
-
-    # generate augmented images
-    for i in range(len(X_train)):
-        x = X_train[i]
-        y = y_train[i]
-        x = x.reshape((1,) + x.shape) # datagen.flow expects 4D arrays, so we need to reshape the 3D array
-        for batch in datagen_no_rescale.flow(x, batch_size=1): # generate 1 augmented image per iteration
-            augmented_images.append(batch[0])
-            augmented_labels.append(y)
-            if len(augmented_images) >= (i + 1) * (augmented_images_per_image + 1):
-                break
-
-    X_train_augmented = np.array(augmented_images)
-    y_train_augmented = np.array(augmented_labels)
-    
-    return X_train_augmented, y_train_augmented
-
 def preproc_pipeline(image_resolution, 
                      classification_type='binary',
                      use_data_augmentation=False,
                      augmented_images_per_image=5,
-                     csv_path = 'image_metadata/updated_image_data.csv',
-                     batch_size=32):
+                     csv_path='image_metadata/updated_image_data.csv',
+                     batch_size=32,
+                     verbose=True):
     """
     Preprocess image data.
 
     This function loads image data from the CSV file containing image metadata, resizes the images, normalizes pixel values,
-    encodes labels, and optionally performs data augmentation on the training set. It returns data generators for training
-    and validation, as well as the test dataset and class weights.
+    encodes labels, and optionally performs data augmentation on the training set. It returns data generators for training,
+    validation, and testing datasets, as well as class weights.
 
     Parameters:
         - image_resolution (tuple): The desired resolution to resize the images (width, height).
@@ -154,12 +117,14 @@ def preproc_pipeline(image_resolution,
         - augmented_images_per_image (int, optional): Number of augmented images to generate per original image. Defaults to 5.
         - csv_path (str, optional): Path to the image metadata CSV file. Defaults to 'image_metadata/updated_image_data.csv'.
         - batch_size (int, optional): The batch size for the data generators. Defaults to 32.
+        - verbose (bool, optional): Whether to print verbose output. Defaults to True.
 
     Returns:
         - train_gen (Iterator): Data generator for the training dataset.
         - val_gen (Iterator): Data generator for the validation dataset.
         - test_gen (Iterator): Data generator for the test dataset.
         - class_weights (dict): Dictionary of class weights to handle class imbalance.
+        - steps_per_epoch (int): Number of steps per epoch for the training generator.
     """
     
     if classification_type == 'binary':
@@ -167,6 +132,9 @@ def preproc_pipeline(image_resolution,
     else: 
         classification_type = 'multiclass'
         label_column = 'Cancer Type'
+    
+    if verbose:
+        print("Loading and preprocessing data...")
     
     X_train, y_train, X_test, y_test, X_val, y_val = load_and_preprocess_data(csv_path, image_resolution, label_column)
     
@@ -181,30 +149,26 @@ def preproc_pipeline(image_resolution,
         fill_mode='nearest',
     )
     
-    datagen_no_rescale = ImageDataGenerator(    # so that we dont rescale twice when using data augmentation
-        rotation_range=30,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        fill_mode='nearest',
-    )
-    
     if use_data_augmentation:
-        X_train, y_train = data_augmentation(X_train, y_train, datagen_no_rescale, augmented_images_per_image)
-    
+        steps_per_epoch = (len(X_train) // batch_size) * augmented_images_per_image # used for defining how many batches the generator provides (which is used in the fit method)
+        train_gen = datagen.flow(X_train, y_train, batch_size=batch_size, shuffle=True)
+        print(f"Total training images after augmentation: {len(X_train) * (augmented_images_per_image + 1)}")
+    else:
+        steps_per_epoch = len(X_train) // batch_size # used for defining how many batches the generator provides (which is used in the fit method)
+        train_gen = ImageDataGenerator(rescale=1./255).flow(X_train, y_train, batch_size=batch_size, shuffle=True)
+        print(f"Total training images (no augmentation): {len(X_train)}")
+
     # calculate class weights because our problem is unbalanced
     class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
     class_weights = {i: weight for i, weight in enumerate(class_weights)}
 
-    # data augmentation generators
-    train_gen = datagen.flow(X_train, y_train, batch_size=batch_size, shuffle=True)
+    if verbose:
+        print("Class weights computed.")
     
-    # define a generator for the validation and test data (only rescale)
-    datagen_clean_pass = ImageDataGenerator(rescale=1./255)
+    val_gen = ImageDataGenerator(rescale=1./255).flow(X_val, y_val, batch_size=batch_size, shuffle=True)
+    test_gen = ImageDataGenerator(rescale=1./255).flow(X_test, y_test, batch_size=batch_size, shuffle=False)
     
-    val_gen = datagen_clean_pass.flow(X_val, y_val, batch_size=batch_size, shuffle=True)
-    test_gen = datagen_clean_pass.flow(X_test, y_test, batch_size=batch_size, shuffle=False)
+    if verbose:
+        print("Data generators created.")
     
-    return train_gen, val_gen, test_gen, class_weights
+    return train_gen, val_gen, test_gen, class_weights, steps_per_epoch

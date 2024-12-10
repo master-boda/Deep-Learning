@@ -121,18 +121,3 @@ def visualize_augmented_images(X_train, datagen):
             ax[i].imshow(batch[0])
             ax[i].axis('off')
         plt.show()
-
-# example usage
-#image_resolution = (224, 224)
-#train_gen, val_gen, test_gen, class_weights = preproc_pipeline(image_resolution, use_data_augmentation=True)
-
-# Visualize some augmented images
-#visualize_augmented_images(next(train_gen)[0], ImageDataGenerator(
-#    rotation_range=30,
-#    width_shift_range=0.2,
-#    height_shift_range=0.2,
-#    shear_range=0.2,
-#    zoom_range=0.2,
-#    horizontal_flip=True,
-#    fill_mode='nearest',
-#))
