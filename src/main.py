@@ -79,6 +79,8 @@ def main(model,
     
     evaluate_model(trained_model, classification_type=classification_type)
     
+    plt.close()
+    
     if save_model_instance:
         save_model(trained_model, f'src/models/{model_name}.h5')
     
@@ -87,15 +89,18 @@ def main(model,
 def main_loop(model_name, classification_type='multiclass', data_augmentation=True, augmented_images_per_image=5):
     
     results = []
+    
+    identifier = 0
 
     for trainable_layers in tqdm(range(4, 16), desc="Trainable Layers"): # progress bar using tqdm
+        identifier += 1
         print(f"Training with {trainable_layers} trainable layers...")
         model = multiclass_classification_vgg16_model(trainable_layers=trainable_layers)
         
         trained_model = main(model, 
                              classification_type=classification_type, 
-                             model_name=model_name, 
-                             save_model_instance=False,
+                             model_name=model_name + '_' + str(identifier) + '_' + str(trainable_layers), 
+                             save_model_instance=True,
                              epochs=40, 
                              early_stopping_patience=10, 
                              batch_size=32, 
@@ -120,6 +125,7 @@ def main_loop(model_name, classification_type='multiclass', data_augmentation=Tr
     print("Results saved to src/models/result_logs/results.json")
 
 
-model = multiclass_classification_vgg16_model(learning_rate=1e-4, trainable_layers=7)
+#model = multiclass_classification_vgg16_model(learning_rate=1e-4, trainable_layers=7)
+#main(model=model, classification_type='multiclass', model_name='VGG16_multiclass')
 
-main(model=model, classification_type='multiclass', model_name='VGG16_multiclass')
+main_loop('VGG16_loop', classification_type='multiclass', data_augmentation=True, augmented_images_per_image=5)
