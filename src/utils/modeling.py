@@ -2,17 +2,17 @@ import numpy as np
 import tensorflow as tf
 import os
 
-from src.utils.preproc import *
+from utils.preproc import *
 
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-from src.utils.visualizations import plot_confusion_matrix
+from utils.visualizations import plot_confusion_matrix
 
 from tabulate import tabulate
 
-def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5, class_weights=None, steps_per_epoch=None):
+def train_model(train_gen, val_gen, model, callbacks, epochs=10, class_weights=None, steps_per_epoch=None):
     """
     Trains a given model using the provided training and validation data generators.
     
@@ -35,8 +35,7 @@ def train_model(train_gen, val_gen, model, epochs=10, early_stopping_patience=5,
         steps_per_epoch=steps_per_epoch,
         class_weight=class_weights,
         validation_data=val_gen,
-        callbacks=[EarlyStopping(patience=early_stopping_patience, monitor='val_loss')]
-    )
+        callbacks=callbacks)
     
     return model
 
