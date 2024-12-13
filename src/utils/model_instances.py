@@ -85,6 +85,8 @@ def binary_classification_inceptionv3_model(input_shape=(224, 224, 3), trainable
                   loss='binary_crossentropy',
                   metrics=['accuracy'])
     
+    return model
+    
 def multiclass_classification_inceptionv3_model(input_shape=(224, 224, 3), trainable_layers=200, learning_rate=0.0001):
     
     base_model = InceptionV3(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -109,3 +111,5 @@ def multiclass_classification_inceptionv3_model(input_shape=(224, 224, 3), train
     model.compile(optimizer=Adam(learning_rate=learning_rate),
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
+    
+    return model

@@ -2,13 +2,12 @@ import numpy as np
 import tensorflow as tf
 import os
 
-from utils.preproc import *
+from src.utils.preproc import *
+from src.utils.visualizations import plot_confusion_matrix
 
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-
-from utils.visualizations import plot_confusion_matrix
 
 from tabulate import tabulate
 
@@ -21,7 +20,6 @@ def train_model(train_gen, val_gen, model, callbacks, epochs=10, class_weights=N
         - val_gen (Generator): The validation data generator.
         - model (tf.keras.Model): The model to be trained.
         - epochs (int, optional): The number of epochs to train the model, the default value is 10.
-        - early_stopping_patience (int, optional): The number of epochs with no improvement (monitors 'val_loss') after which training will be stopped, the default value is 5.
         - class_weights (dict, optional): Dictionary mapping class indices (integers) to a weight (float) value, used for weighting the loss function during training. Defaults to None.
         - steps_per_epoch (int, optional): The number of steps (batches of samples) to yield from the generator before declaring one epoch finished and starting the next epoch. Defaults to None.
         

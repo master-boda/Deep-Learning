@@ -105,8 +105,8 @@ def visualize_augmented_images(X_train, datagen):
     to create augmented versions of these images, and displays them in a 1x5 grid.
 
     Parameters:
-    X_train (numpy.ndarray): Array of training images.
-    datagen (ImageDataGenerator): Keras ImageDataGenerator instance for augmenting images.
+        - X_train (numpy.ndarray): Array of training images.
+        - datagen (ImageDataGenerator): Keras ImageDataGenerator instance for augmenting images.
 
     Returns:
         None
@@ -121,3 +121,23 @@ def visualize_augmented_images(X_train, datagen):
             ax[i].imshow(batch[0])
             ax[i].axis('off')
         plt.show()
+        
+def plot_training_history(model, metric='loss', title='Model Loss'):
+    """
+    Plots the training history of a TensorFlow model.
+    
+    Parameters:
+        - model (tf.keras.Model): The trained TensorFlow model.
+        - metric (str, optional): The metric to plot. Default is 'loss'.
+        - title (str, optional): The title of the plot. Default is 'Model Loss'.
+        
+    Returns:
+        None
+    """
+    plt.plot(model.history.history[metric])
+    plt.plot(model.history.history[f'val_{metric}'])
+    plt.title(title)
+    plt.ylabel(metric)
+    plt.xlabel('Epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
