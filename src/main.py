@@ -92,7 +92,7 @@ def main_loop(model_name, classification_type='multiclass', data_augmentation=Tr
     for trainable_layers in [100, 150, 200, 250]:
         identifier += 1
         print(f"Training with {trainable_layers} trainable layers...")
-        model = multiclass_classification_inceptionv3_model(trainable_layers=trainable_layers, learning_rate=1e-5)
+        model = multiclass_classification_inceptionv3_model(trainable_layers=trainable_layers, learning_rate=1e-4)
         
         trained_model, results = main(model, 
                              classification_type=classification_type, 

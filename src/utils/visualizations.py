@@ -146,3 +146,39 @@ def plot_training_history(model, metric='loss', title='Model Loss'):
     plt.xlabel('Epoch')
     plt.legend(['train', 'val'], loc='upper left')
     plt.show()
+    
+def plot_images_compare_magnification(data, benign_types, malignant_types, magnifications):
+    """
+    Plots a comparison of images from different magnifications for each cancer type.
+    
+    Parameters:
+        - data (pd.DataFrame): DataFrame containing the image data with the columns 'Cancer Type', 'Magnification', and 'path_to_image'.
+        - benign_types (list): List of benign cancer types to be compared.
+        - malignant_types (list): List of malignant cancer types to be compared.
+        - magnifications (list): List of magnifications to be compared.
+        
+    Returns:
+        None
+    """
+    nrows = 2  # two rows: one for benign, one for malignant
+    ncols = 4  # four columns for each row
+    
+    fig, axes = plt.subplots(figsize=(25, 10), nrows=nrows, ncols=ncols, sharey=True)
+
+    for j, cancer_type in enumerate(benign_types + malignant_types):
+        row = 0 if cancer_type in benign_types else 1
+        col = benign_types.index(cancer_type) if cancer_type in benign_types else malignant_types.index(cancer_type)
+
+        for mag in magnifications:
+            temp_df = data[(data['Cancer Type'] == cancer_type) & (data['Magnification'] == mag)]
+
+            # random image
+            random_id = temp_df.sample(n=1).index[0]
+            image = cv2.imread(data.loc[random_id, 'path_to_image'])
+
+            axes[row][col].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            axes[row][col].set_title(f"{cancer_type} (Mag.= {mag})", fontsize=18, fontweight='bold')
+            axes[row][col].axis('off')
+
+    plt.tight_layout()
+    plt.show()
