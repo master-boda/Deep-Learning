@@ -5,6 +5,8 @@ from sklearn.preprocessing import LabelEncoder
 from keras.preprocessing.image import ImageDataGenerator
 from sklearn.utils import class_weight
 
+from src.utils.visualizations import visualize_original_and_augmented_images
+
 def resize_and_append(image_path, label, X, y, img_size):
     """
     Resize an image and append it along with its label to the provided lists.

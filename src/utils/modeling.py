@@ -1,9 +1,10 @@
 import numpy as np
 import tensorflow as tf
 import os
+import json
 
-from utils.preproc import *
-from utils.visualizations import plot_confusion_matrix
+from src.utils.preproc import *
+from src.utils.visualizations import plot_confusion_matrix
 
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
@@ -37,21 +38,28 @@ def train_model(train_gen, val_gen, model, callbacks, epochs=10, class_weights=N
     
     return model
 
-def save_model(model, path="src/models", model_name="saved_model.h5"):
+def save_model(model, history, path="src/models", model_name="saved_model.h5", history_name="training_history.json"):
     """
-    Save the TensorFlow model to the specified path in HDFS5 format.
-
+    Save the TensorFlow model and its training history to the specified path.
+    
     Parameters:
     - model: TensorFlow model to be saved.
-    - path: Destination path where the model will be saved. Default is "src/models".
+    - history: Training history to be saved.
+    - path: Destination path where the model and history will be saved. Default is "src/models".
     - model_name: Name of the model file. Default is "saved_model.h5".
+    - history_name: Name of the history file. Default is "training_history.json".
     
     Returns:
         None
     """
     if not os.path.exists(path):
         os.makedirs(path)
+    
     model.save(os.path.join(path, model_name), save_format='h5')
+    
+    history_dict = history.history
+    with open(os.path.join(path, history_name), 'w') as f:
+        json.dump(history_dict, f)
 
 def evaluate_model(model, classification_type='binary', show_confusion_matrix=True):
     """
