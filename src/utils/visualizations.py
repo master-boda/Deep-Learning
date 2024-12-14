@@ -239,4 +239,3 @@ def plot_results(history, metric):
         plt.ylabel(metric.capitalize())
         plt.xlabel('Epochs')
         plt.legend(['Train', 'Validation'], loc='upper left')
-    #plt.show()
