@@ -5,6 +5,29 @@ from PIL import Image
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 
+# Set default parameters to make visuals consistent throughout the notebook
+plt.rc('figure', figsize=(10, 6))  
+plt.rc('axes', labelsize=14)      
+plt.rc('xtick', labelsize=12)     
+plt.rc('ytick', labelsize=12)      
+plt.rc('axes', titlesize=16)      
+plt.rc('axes', linewidth=1.2)     
+plt.rc('lines', linewidth=2)       
+plt.rc('legend', fontsize=12)      
+plt.rc('grid', linestyle='--', alpha=0.7) 
+
+sns.set_style("ticks", {
+    "axes.spines.left": True,
+    "axes.spines.bottom": True,
+    "axes.spines.top": False,
+    "axes.spines.right": False
+})
+sns.set_palette('muted') 
+sns.set_context("notebook", font_scale=1.2)  
+
+plt.rcParams['font.family'] = 'Times New Roman'
+
+
 def check_image_resolutions(metadata):
     """
     Check the resolutions of images listed in the metadata.
@@ -147,7 +170,7 @@ def plot_training_history(model, metric='loss', title='Model Loss'):
     plt.legend(['train', 'val'], loc='upper left')
     plt.show()
     
-def plot_images_compare_magnification(data, benign_types, malignant_types, magnifications):
+def plot_images_cancer_types(data, benign_types, malignant_types, magnifications):
     """
     Plots a comparison of images from different magnifications for each cancer type.
     
@@ -182,3 +205,38 @@ def plot_images_compare_magnification(data, benign_types, malignant_types, magni
 
     plt.tight_layout()
     plt.show()
+
+def image_dist_by_magnification(df):
+    sns.countplot(data=df, x='Magnification', order=['40X', '100X', '200X', '400X'])
+    plt.title("Image Distribution by Magnification")
+    plt.show()
+
+def plot_results(history, metric):
+    """"
+    Plot either the accuracy or loss of the model throught the training epochs,
+    both for the training and validation sets.
+    Parameters:
+        history: The history of the model training.
+        metric: The metric to plot. Either 'accuracy' or 'loss'.
+    Returns:
+        None
+    """
+    #Context to avoid interfering with default visaulization parameters
+    with plt.rc_context():
+        '''plt.rc('lines', linewidth=1.5)  
+        sns.set_palette('Blues_d')  
+        sns.set_style('whitegrid', {"axes.spines.left": True, "axes.spines.bottom": True, "axes.spines.top": False, "axes.spines.right": False})  # Reset style temporarily
+        plt.rcParams['font.family'] = 'Times New Roman'''
+
+        #Plot a line for the metric desired
+        if type(history) == dict:
+            plt.plot(history[metric])
+            plt.plot(history[f'val_{metric}'])
+        else:
+            plt.plot(history.history[metric])
+            plt.plot(history.history[f'val_{metric}'])
+        plt.title(f'Model\'s {metric.capitalize()}', fontsize=18, fontweight='bold', loc='left', pad=20)
+        plt.ylabel(metric.capitalize())
+        plt.xlabel('Epochs')
+        plt.legend(['Train', 'Validation'], loc='upper left')
+    #plt.show()
