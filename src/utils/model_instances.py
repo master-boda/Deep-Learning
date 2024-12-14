@@ -77,6 +77,7 @@ def binary_classification_inceptionv3_model(input_shape=(224, 224, 3), trainable
     model.add(GlobalAveragePooling2D())
     
     model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
     
     model.add(Dense(1, activation='sigmoid'))
     
@@ -104,6 +105,7 @@ def multiclass_classification_inceptionv3_model(input_shape=(224, 224, 3), train
     model.add(GlobalAveragePooling2D())
     
     model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))    
     
     model.add(Dense(8, activation='softmax'))
     

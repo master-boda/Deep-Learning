@@ -5,7 +5,6 @@ from utils.visualizations import *
 
 import tensorflow as tf
 import json
-from tqdm import tqdm
 
 # for releasing the GPU memory (only useful if using CUDA)
 from numba import cuda
@@ -77,27 +76,25 @@ def main(model,
     
     trained_model = train_model(train_gen, val_gen, model, callbacks=callbacks, epochs=epochs, class_weights=class_weights, steps_per_epoch=steps_per_epoch)
     
-    evaluate_model(trained_model, classification_type=classification_type)
-    
-    plt.close()
-    
+    results = evaluate_model(trained_model, classification_type=classification_type, show_confusion_matrix=False)
+        
     if save_model_instance:
         save_model(trained_model, f'src/models/{model_name}.h5')
     
-    return trained_model
+    return trained_model, results
 
 def main_loop(model_name, classification_type='multiclass', data_augmentation=True, augmented_images_per_image=5):
     
-    results = []
+    results_lt = []
     
     identifier = 0
 
-    for trainable_layers in tqdm(range(4, 16), desc="Trainable Layers"): # progress bar using tqdm
+    for trainable_layers in [100, 150, 200, 250]:
         identifier += 1
         print(f"Training with {trainable_layers} trainable layers...")
-        model = multiclass_classification_vgg16_model(trainable_layers=trainable_layers)
+        model = multiclass_classification_inceptionv3_model(trainable_layers=trainable_layers, learning_rate=1e-5)
         
-        trained_model = main(model, 
+        trained_model, results = main(model, 
                              classification_type=classification_type, 
                              model_name=model_name + '_' + str(identifier) + '_' + str(trainable_layers), 
                              save_model_instance=True,
@@ -109,15 +106,14 @@ def main_loop(model_name, classification_type='multiclass', data_augmentation=Tr
                              augmented_images_per_image=augmented_images_per_image, 
                              image_resolution=(224, 224))
         
-        result = evaluate_model(trained_model, classification_type=classification_type)
-        results.append({
+        results_lt.append({
             'model_architecture': model_name + ' (' + classification_type + ')',
             'trainable_layers': trainable_layers,
-            'results': result
+            'results': results
         })
         
         print(f"Completed training with {trainable_layers} trainable layers.\n")
-        print(f"Results: {result}")
+        print(f"Results: {results}")
 
 
     with open('src/models/result_logs/results.json', 'w') as f:
@@ -128,4 +124,6 @@ def main_loop(model_name, classification_type='multiclass', data_augmentation=Tr
 #model = multiclass_classification_vgg16_model(learning_rate=1e-4, trainable_layers=7)
 #main(model=model, classification_type='multiclass', model_name='VGG16_multiclass')
 
-main_loop('VGG16_loop', classification_type='multiclass', data_augmentation=True, augmented_images_per_image=5)
+main_loop('InceptionV3_loop_binary', classification_type='multiclass', data_augmentation=True, augmented_images_per_image=5)
+
+main_loop('InceptionV3_loop_multiclass', classification_type='binary', data_augmentation=True, augmented_images_per_image=5)

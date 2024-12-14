@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 import os
 
-from src.utils.preproc import *
-from src.utils.visualizations import plot_confusion_matrix
+from utils.preproc import *
+from utils.visualizations import plot_confusion_matrix
 
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
@@ -53,7 +53,7 @@ def save_model(model, path="src/models", model_name="saved_model.h5"):
         os.makedirs(path)
     model.save(os.path.join(path, model_name), save_format='h5')
 
-def evaluate_model(model, classification_type='binary'):
+def evaluate_model(model, classification_type='binary', show_confusion_matrix=True):
     """
     Evaluate a TensorFlow model and plot evaluation metrics.
     
@@ -127,8 +127,11 @@ def evaluate_model(model, classification_type='binary'):
     print("\nOverall Metrics:")
     print(tabulate(overall_rows, overall_headers, tablefmt='grid'))
 
-    plot_confusion_matrix(y_true_labels, y_pred_labels, class_names)
-    print("Plotted confusion matrix.")
+    if show_confusion_matrix:
+        print("\nConfusion Matrix:")
+        plot_confusion_matrix(y_true_labels, y_pred_labels, class_names)
+    else:
+        plot_confusion_matrix(y_true_labels, y_pred_labels, class_names, save_to_file=True)
     
     results = {
         'accuracy': accuracy,
