@@ -105,7 +105,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, save_to_file=False, filen
     else:
         plt.show()
             
-def plot_training_history(model, metric='loss', title='Model Loss'):
+def plot_training_history(history, metric='loss', title='Model Loss'):
     """
     Plots the training history of a TensorFlow model.
     
@@ -117,8 +117,8 @@ def plot_training_history(model, metric='loss', title='Model Loss'):
     Returns:
         None
     """
-    plt.plot(model.history.history[metric])
-    plt.plot(model.history.history[f'val_{metric}'])
+    plt.plot(history[metric])
+    plt.plot(history[f'val_{metric}'])
     plt.title(title)
     plt.ylabel(metric)
     plt.xlabel('Epoch')

@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import json
+import pickle
 
 from src.utils.preproc import *
 from src.utils.visualizations import plot_confusion_matrix
@@ -38,7 +39,7 @@ def train_model(train_gen, val_gen, model, callbacks, epochs=10, class_weights=N
     
     return model
 
-def save_model(model, history, path="src/models", model_name="saved_model.h5", history_name="training_history.json"):
+def save_model(model, path="src/models", model_name="saved_model.h5", history_name="training_history.json"):
     """
     Save the TensorFlow model and its training history to the specified path.
     
@@ -57,9 +58,23 @@ def save_model(model, history, path="src/models", model_name="saved_model.h5", h
     
     model.save(os.path.join(path, model_name), save_format='h5')
     
-    history_dict = history.history
-    with open(os.path.join(path, history_name), 'w') as f:
-        json.dump(history_dict, f)
+def save_training_history(history, path, history_name="model_history.pkl"):
+    """
+    Save the training history to the specified path using pickle.
+        
+    Parameters:
+    - history: Training history to be saved.
+    - path: Destination path where the history will be saved. Default is "src/models".
+    - history_name: Name of the history file. Default is "training_history.pkl".
+        
+    Returns:
+        None
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
+        
+    with open(os.path.join(path, history_name), 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
 
 def evaluate_model(model, classification_type='binary', show_confusion_matrix=True):
     """
