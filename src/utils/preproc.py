@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from sklearn.preprocessing import LabelEncoder
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.utils import class_weight
 
 
