@@ -1,10 +1,8 @@
-import pandas as pd
 import matplotlib.pyplot as plt 
 import cv2
 from PIL import Image
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
-
 
 plt.rc('figure', figsize=(10, 6))  
 plt.rc('axes', labelsize=14)      

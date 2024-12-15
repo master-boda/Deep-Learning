@@ -195,16 +195,24 @@ def keras_tuning_model_builder(hp, input_shape=(224, 224, 3), classification_typ
     # Convolutional and Pooling Layers
     # ------------------------------
 
-    conv_filters1 = hp.Int('conv_filters1', min_value=128, max_value=256, step=32)
-    model.add(Conv2D(filters=conv_filters1, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    conv_filter_1 = hp.Int('conv_filter_1', min_value=64, max_value=128, step=32)
+    model.add(Conv2D(filters=conv_filter_1, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
     model.add(MaxPooling2D(pool_size=(3, 3)))
 
-    conv_filters2 = hp.Int('conv_filters2', min_value=256, max_value=512, step=64)
-    model.add(Conv2D(filters=conv_filters2, kernel_size=(3, 3), activation='relu'))
+    conv_filter_2 = hp.Int('conv_filter_2', min_value=128, max_value=256, step=64)
+    model.add(Conv2D(filters=conv_filter_2, kernel_size=(3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    conv_filters3 = hp.Int('conv_filters3', min_value=512, max_value=600, step=64)
-    model.add(Conv2D(filters=conv_filters3, kernel_size=(3, 3), activation='relu'))
+    conv_filter_3 = hp.Int('conv_filter_3', min_value=256, max_value=512, step=64)
+    model.add(Conv2D(filters=conv_filter_3, kernel_size=(3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    
+    conv_filter_4 = hp.Int('conv_filter_4', min_value=512, max_value=1024, step=128)
+    model.add(Conv2D(filters=conv_filter_4, kernel_size=(3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    
+    conv_filter_5 = hp.Int('conv_filter_5', min_value=512, max_value=1024, step=128)
+    model.add(Conv2D(filters=conv_filter_5, kernel_size=(3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     # ------------------------------
@@ -216,20 +224,11 @@ def keras_tuning_model_builder(hp, input_shape=(224, 224, 3), classification_typ
     # Dense and Dropout Layers
     # ------------------------------
 
-    dense0_units = hp.Int('units0', min_value=256, max_value=512, step=64)
-    model.add(Dense(units=dense0_units, activation='relu'))
+    dense_units_0 = hp.Int('dense_units_0', min_value=256, max_value=512, step=64)
+    model.add(Dense(units=dense_units_0, activation='relu'))
 
-    dropout_units1 = hp.Float('units_dr1', min_value=0, max_value=0.25, step=0.1)
-    model.add(Dropout(rate=dropout_units1))
-
-    dense1_units = hp.Int('units1', min_value=256, max_value=512, step=64)
-    model.add(Dense(units=dense1_units, activation='relu'))
-
-    dense2_units = hp.Int('units2', min_value=128, max_value=256, step=32)
-    model.add(Dense(units=dense2_units, activation='relu'))
-
-    dropout_units2 = hp.Float('units_dr2', min_value=0, max_value=0.25, step=0.1)
-    model.add(Dropout(rate=dropout_units2))
+    dropout_rate_0 = hp.Float('dropout_rate_0', min_value=0, max_value=0.25, step=0.1)
+    model.add(Dropout(rate=dropout_rate_0))
 
     # ------------------------------
     # Output Layer
@@ -244,9 +243,9 @@ def keras_tuning_model_builder(hp, input_shape=(224, 224, 3), classification_typ
     # ------------------------------
     # Compile the Model
     # ------------------------------
-    hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+    learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
     model.compile(
-        optimizer=Adam(learning_rate=hp_learning_rate),
+        optimizer=Adam(learning_rate=learning_rate),
         loss=loss,
         metrics=['accuracy']
     )
