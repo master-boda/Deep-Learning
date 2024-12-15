@@ -42,7 +42,8 @@ def update_image_paths(metadata):
         lambda row: os.path.join('data', row['image_location'], row['image_name']),
         axis=1
     )
-    
+
+    metadata['path_to_image'] = metadata['path_to_image'].apply(lambda x: x.replace('\\', '/'))
     metadata.drop(columns=['image_name', 'image_location'], inplace=True)
     
     return metadata
@@ -169,7 +170,7 @@ if __name__ == '__main__':  # avoid running the code when importing the module
 
     # define directory path for dataset (\DeepLearning24_25\)
     # ---------------------------------
-    source_directory = r"D:\DeepLearning24_25"
+    source_directory = r'/Users/kikobatistaa/Downloads'
     # ---------------------------------
 
     metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
