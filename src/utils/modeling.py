@@ -2,13 +2,18 @@ import numpy as np
 import tensorflow as tf
 import os
 import json
+import pickle
 
 from src.utils.preproc import *
 from src.utils.visualizations import plot_confusion_matrix
 
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.models import Model, Sequential, load_model
+from keras.applications import VGG16, InceptionV3
+from keras.layers import Dense, Flatten, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D
+from keras.optimizers import Adam
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 
 from tabulate import tabulate
 
@@ -38,7 +43,7 @@ def train_model(train_gen, val_gen, model, callbacks, epochs=10, class_weights=N
     
     return model
 
-def save_model(model, history, path="src/models", model_name="saved_model.h5", history_name="training_history.json"):
+def save_model(model, path="src/models", model_name="saved_model.h5", history_name="training_history.json"):
     """
     Save the TensorFlow model and its training history to the specified path.
     
@@ -57,9 +62,23 @@ def save_model(model, history, path="src/models", model_name="saved_model.h5", h
     
     model.save(os.path.join(path, model_name), save_format='h5')
     
-    history_dict = history.history
-    with open(os.path.join(path, history_name), 'w') as f:
-        json.dump(history_dict, f)
+def save_training_history(history, path, history_name="model_history.pkl"):
+    """
+    Save the training history to the specified path using pickle.
+        
+    Parameters:
+    - history: Training history to be saved.
+    - path: Destination path where the history will be saved. Default is "src/models".
+    - history_name: Name of the history file. Default is "training_history.pkl".
+        
+    Returns:
+        None
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
+        
+    with open(os.path.join(path, history_name), 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
 
 def evaluate_model(model, classification_type='binary', show_confusion_matrix=True):
     """
@@ -148,3 +167,88 @@ def evaluate_model(model, classification_type='binary', show_confusion_matrix=Tr
     }
     print("Evaluation complete. Returning results.")
     return results
+
+def keras_tuning_model_builder(hp, input_shape=(224, 224, 3), classification_type='binary'):
+    
+    """
+    Build a CNN model with a hyperparameter search space for tuning.
+
+    This function constructs a Convolutional Neural Network (CNN) model adaptable for both binary and multiclass 
+    image classification tasks. The model architecture includes convolutional layers, dense layers, and dropout layers. 
+    Hyperparameters for filters, dense units, dropout rates, and learning rates are defined using the Keras Tuner.
+
+    Parameters:
+        - hp (HyperParameters): The Keras Tuner HyperParameters object for defining the search space.
+        - input_shape (tuple, optional): The shape of the input images (height, width, channels). Defaults to (224, 224, 3).
+        - num_classes (int, optional): The number of output classes. Use 2 for binary classification and >2 for multiclass classification. Defaults to 2.
+
+    Returns:
+        - model (Sequential): The compiled Keras model ready for hyperparameter tuning.
+    """
+
+    # ------------------------------
+    # Initialize the Model
+    # ------------------------------
+    model = Sequential()
+
+    # ------------------------------
+    # Convolutional and Pooling Layers
+    # ------------------------------
+
+    conv_filters1 = hp.Int('conv_filters1', min_value=128, max_value=256, step=32)
+    model.add(Conv2D(filters=conv_filters1, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+
+    conv_filters2 = hp.Int('conv_filters2', min_value=256, max_value=512, step=64)
+    model.add(Conv2D(filters=conv_filters2, kernel_size=(3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    conv_filters3 = hp.Int('conv_filters3', min_value=512, max_value=600, step=64)
+    model.add(Conv2D(filters=conv_filters3, kernel_size=(3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # ------------------------------
+    # Flatten Layer
+    # ------------------------------
+    model.add(Flatten())
+
+    # ------------------------------
+    # Dense and Dropout Layers
+    # ------------------------------
+
+    dense0_units = hp.Int('units0', min_value=256, max_value=512, step=64)
+    model.add(Dense(units=dense0_units, activation='relu'))
+
+    dropout_units1 = hp.Float('units_dr1', min_value=0, max_value=0.25, step=0.1)
+    model.add(Dropout(rate=dropout_units1))
+
+    dense1_units = hp.Int('units1', min_value=256, max_value=512, step=64)
+    model.add(Dense(units=dense1_units, activation='relu'))
+
+    dense2_units = hp.Int('units2', min_value=128, max_value=256, step=32)
+    model.add(Dense(units=dense2_units, activation='relu'))
+
+    dropout_units2 = hp.Float('units_dr2', min_value=0, max_value=0.25, step=0.1)
+    model.add(Dropout(rate=dropout_units2))
+
+    # ------------------------------
+    # Output Layer
+    # ------------------------------
+    if classification_type == 'binary':
+        model.add(Dense(1, activation='sigmoid'))
+        loss = 'binary_crossentropy'
+    else:
+        model.add(Dense(8, activation='softmax'))
+        loss = 'sparse_categorical_crossentropy'
+
+    # ------------------------------
+    # Compile the Model
+    # ------------------------------
+    hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+    model.compile(
+        optimizer=Adam(learning_rate=hp_learning_rate),
+        loss=loss,
+        metrics=['accuracy']
+    )
+
+    return model
