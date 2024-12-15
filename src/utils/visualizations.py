@@ -233,6 +233,7 @@ def plot_results(history, metric):
             plt.plot(history.history[f'val_{metric}'])
         plt.title(f'Model\'s {metric.capitalize()}', fontsize=18, fontweight='bold', loc='left', pad=20)
         plt.ylabel(metric.capitalize())
+        plt.ylim(0, 1)
         plt.xlabel('Epochs')
         plt.legend(['Train', 'Validation'], loc='upper left')
 

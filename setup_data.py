@@ -169,7 +169,7 @@ if __name__ == '__main__':  # avoid running the code when importing the module
 
     # define directory path for dataset (\DeepLearning24_25\)
     # ---------------------------------
-    source_directory = r"D:\DeepLearning24_25"
+    source_directory = r"C:\Users\tomes\Desktop\aulas\Deep Learning\Project\DeepLearning24_25"
     # ---------------------------------
 
     metadata_csv = os.path.join(source_directory, 'BreaKHis_v1 2/histology_slides/breast/image_data.csv')
