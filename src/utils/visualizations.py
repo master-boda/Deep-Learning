@@ -209,7 +209,7 @@ def image_dist_by_magnification(df):
     plt.title("Image Distribution by Magnification")
     plt.show()
 
-def plot_results(history, metric):
+def plot_results(history, metric, label):
     """"
     Plot either the accuracy or loss of the model throught the training epochs,
     both for the training and validation sets.
@@ -220,20 +220,27 @@ def plot_results(history, metric):
         None
     """
     with plt.rc_context():
-        '''plt.rc('lines', linewidth=1.5)  
-        sns.set_palette('Blues_d')  
-        sns.set_style('whitegrid', {"axes.spines.left": True, "axes.spines.bottom": True, "axes.spines.top": False, "axes.spines.right": False})
+        '''plt.rc('lines', linewidth=1.5)
+        sns.set_palette('Blues_d')
+        sns.set_style('whitegrid', {"axes.spines.left": True, "axes.spines.bottom": True, "axes.spines.top": False, "axes.spines.right": False})  # Reset style temporarily
         plt.rcParams['font.family'] = 'Times New Roman'''
 
         if type(history) == dict:
-            plt.plot(history[metric])
-            plt.plot(history[f'val_{metric}'])
+            plt.plot(history[metric], label=f'{label} Train')
+            plt.plot(history[f'val{metric}'], label=f'{label} Val')
         else:
-            plt.plot(history.history[metric])
-            plt.plot(history.history[f'val_{metric}'])
-        plt.title(f'Model\'s {metric.capitalize()}', fontsize=18, fontweight='bold', loc='left', pad=20)
-        plt.ylabel(metric.capitalize())
-        plt.ylim(0, 1)
-        plt.xlabel('Epochs')
-        plt.legend(['Train', 'Validation'], loc='upper left')
+            plt.plot(history.history[metric], label=f'{label} Train')
+            plt.plot(history.history[f'val_{metric}'], label=f'{label} Val')
 
+        plt.title(f"Model's {metric.capitalize()}", fontsize=18, fontweight='bold', loc='left', pad=20)
+        plt.ylabel(metric.capitalize())
+
+        if metric == 'accuracy':
+            plt.ylim(0, 1)
+        else: 
+            max_loss = max(history['loss']) 
+            plt.ylim(0, max(1, max_loss))
+
+        plt.xlabel('Epochs')
+        plt.legend(loc='upper left')
+        plt.show()
